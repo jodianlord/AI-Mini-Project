@@ -4,7 +4,7 @@
 # educational purposes provided that (1) you do not distribute or publish
 # solutions, (2) you retain this notice, and (3) you provide clear
 # attribution to UC Berkeley, including a link to http://ai.berkeley.edu.
-# 
+#
 # Attribution Information: The Pacman AI projects were developed at UC Berkeley.
 # The core projects and autograders were primarily created by John DeNero
 # (denero@cs.berkeley.edu) and Dan Klein (klein@cs.berkeley.edu).
@@ -16,6 +16,7 @@
 
 from game import Directions, Actions
 import util
+
 
 def ghostDistance(pacman_pos, ghost_pos, walls):
     fringe = [(pacman_pos[0], pacman_pos[1], 0)]
@@ -53,7 +54,8 @@ def pacmanDistance(pacman_pos, ghost_pos, walls):
             fringe.append((nbr_x, nbr_y, dist+1))
     # no capsule found
     return None
- 
+
+
 def closestCapsule(pos, capsules, walls):
     fringe = [(pos[0], pos[1], 0)]
     expanded = set()
@@ -72,6 +74,7 @@ def closestCapsule(pos, capsules, walls):
     # no capsule found
     return None
 
+
 class GhostFeatureExtractor:
     def getFeatures(self, state, action):
         """
@@ -81,12 +84,13 @@ class GhostFeatureExtractor:
         """
         util.raiseNotDefined()
 
+
 class GhostIdentityExtractor(GhostFeatureExtractor):
     def getFeatures(self, state, action):
         feats = util.Counter()
-        feats[(state,action)] = 1.0
+        feats[(state, action)] = 1.0
         return feats
-    
+
 
 class GhostAdvancedExtractor(GhostFeatureExtractor):
     """
@@ -96,9 +100,10 @@ class GhostAdvancedExtractor(GhostFeatureExtractor):
     - whether a ghost collision is imminent
     - whether a ghost is one step away
     """
+
     def getFeatures(self, state, action):
         # extract the grid of food and wall locations and get the ghost locations
-        ghostState = state.getGhostState( self.index )
+        ghostState = state.getGhostState(self.index)
         food = state.getFood()
         walls = state.getWalls()
         ghosts = state.getGhostPositions()
@@ -107,56 +112,58 @@ class GhostAdvancedExtractor(GhostFeatureExtractor):
         ghost2 = ghostState.getGhostPosition()
         capsules = state.getCapsules()
         closestCapsule = closestCapsule(pacman, capsules, walls)
-        
-        #find other ghost position
+
+        # find other ghost position
         for g in ghosts:
             if g != ghost:
                 ghost2 = g
 
         features = util.Counter()
-        
+
         features["bias"] = 1.0
-        
+
         # compute the location of ghost after he takes the action
         x, y = state.getGhostPosition()
         dx, dy = Actions.directionToVector(action)
         next_x, next_y = int(x + dx), int(y + dy)
-        
+
         #Ghost is scared
-        ghostState = state.getGhostState( self.index )
+        ghostState = state.getGhostState(self.index)
         isScared = ghostState.scaredTimer > 0
         if isScared:
-            features["scared"] = float(pacmanDistance(pacman, (next_x, next_y), walls)) / (walls.width * walls.height)
-            features["distancefrompacmanunscared"] = 1
-            features["eats-pacman"] = -1
+            features["scared"] = float(pacmanDistance(
+                pacman, (next_x, next_y), walls)) / (walls.width * walls.height)
+            features["distancefrompacmanunscared"] = 0
+            features["eats-pacman"] = 0
         else:
             features["eats-pacman"] = 1.0
-            features["distancefrompacmanunscared"] = float(pacmanDistance(pacman, (next_x, next_y), walls)) / (walls.width * walls.height)
-            features["scared"] = 1
-    
+            features["distancefrompacmanunscared"] = float(pacmanDistance(
+                pacman, (next_x, next_y), walls)) / (walls.width * walls.height)
+            features["scared"] = 0
+
+        print("MY DICK IS SCARED")
+
         # count the number of ghosts 1-step away
-        #features["#-of-ghosts-1-step-away"] = sum((next_x, next_y) in Actions.getLegalNeighbors(g, walls) for g in ghosts)
-        
+        # features["#-of-ghosts-1-step-away"] = sum((next_x, next_y) in Actions.getLegalNeighbors(g, walls) for g in ghosts)
+
         # distance of ghost from each other
         #features["distancebetweenghosts"] = float(ghostDistance(ghost, ghost2, walls)) / (walls.width * walls.height)
-        
-        #Next distance from each other
+
+        # Next distance from each other
         #features["distancebetweenghostsInNextAction"] = float(ghostDistance((next_x, next_y), ghost2, walls)) / (walls.width * walls.height)
-        
+
         # distance of capsule from pacman in relation to distance of ghost from pacman
-        #features["distanceofghostfrompacman"] = (float(pacmanDistance(pacman, ghost, walls)) / (walls.width * walls.height)) 
+        #features["distanceofghostfrompacman"] = (float(pacmanDistance(pacman, ghost, walls)) / (walls.width * walls.height))
         #features["pactmanfromcapsule"] = (float(pacmanDistance(pacman, capsule, walls)) / (walls.width * walls.height))
-    
+
         # if there is no ghosts nearyby go for pacman
-        #if not features["#-of-ghosts-1-step-away"] and pacman[next_x][next_y]:
+        # if not features["#-of-ghosts-1-step-away"] and pacman[next_x][next_y]:
         #   features["eats-pacman"] = 1.0
-    
+
         #dist = pacmanDistance(pacman, ghost, walls)
-        #if dist is not None:
-            # make the distance a number less than one otherwise the update
-            # will diverge wildly
-            #features["pacman"] = float(dist) / (walls.width * walls.height)
+        # if dist is not None:
+        # make the distance a number less than one otherwise the update
+        # will diverge wildly
+        #features["pacman"] = float(dist) / (walls.width * walls.height)
         features.divideAll(10.0)
         return features
-    
-
