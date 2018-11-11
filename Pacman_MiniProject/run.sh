@@ -1,0 +1,1 @@
+python3 pacman.py -x 3 -y 2	-n 10 -g QLearningGhostAgent -a	extractor=GhostAdvancedExtractor -p	RandomPacmanAgent
